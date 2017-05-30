@@ -1,5 +1,3 @@
-
-#include "stdafx.h"
 #include <iostream>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -11,25 +9,40 @@
 using namespace cv;
 using namespace std;
 
+int Rmin = 170;
+int Rmax = 179;
+int Gmin = 150;
+int Gmax = 255;
+int Bmin = 0;
+int Bmax = 255;
 
-int H_MIN = 0;
-int H_MAX = 256;
-int S_MIN = 0;
-int S_MAX = 256;
-int V_MIN = 0;
-int V_MAX = 256;
-int iLowH = H_MIN;
-int iHighH = H_MAX;
-int iLowS = S_MIN;
-int iHighS = S_MAX;
-int iLowV = V_MIN;
-int iHighV = V_MAX;
-const int width = 640;
-const int height = 480;
+int R = Rmin;
+int R2 = Rmax;
+
+int G = Gmin;
+int G2 = Gmax;
+
+int B = Bmin;
+int B2 = Bmax;
+
+const int FRAME_WIDTH = 640;
+const int FRAME_HEIGHT = 480;
 const int MAX_NUM_OBJECTS = 50;
 const int MIN_OBJECT_AREA = 20 * 20;
 const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH / 1.5;
 
+void trackbars(){
+	namedWindow("RGB - ustawienia", CV_WINDOW_AUTOSIZE);
+
+	createTrackbar("Redmin", "RGB - ustawienia", &R, 255);
+	createTrackbar("Redmax", "RGB - ustawienia", &R2, 256);
+
+	createTrackbar("Greenmin", "RGB - ustawienia", &G, 255);
+	createTrackbar("Greenmax", "RGB - ustawienia", &G2, 256);
+
+	createTrackbar("Bluemin", "RGB - ustawienia", &B, 255);
+	createTrackbar("Bluemax", "RGB - ustawienia", &B2, 255);
+}
 
 string intToString(int number){
 
@@ -39,30 +52,28 @@ string intToString(int number){
 	return ss.str();
 }
 
-void Rysowanie(int x, int y, Mat &frame){
-	
-
+void Draw(int x, int y, Mat &frame){
 
 	circle(frame, Point(x, y), 20, Scalar(0, 255, 0), 2);
 	if (y - 25>0)
 		line(frame, Point(x, y), Point(x, y - 25), Scalar(0, 255, 0), 2);
 	else line(frame, Point(x, y), Point(x, 0), Scalar(0, 255, 0), 2);
-	if (y + 25 <height)
+	if (y + 25<FRAME_HEIGHT)
 		line(frame, Point(x, y), Point(x, y + 25), Scalar(0, 255, 0), 2);
-	else line(frame, Point(x, y), Point(x, height), Scalar(0, 255, 0), 2);
+	else line(frame, Point(x, y), Point(x, FRAME_HEIGHT), Scalar(0, 255, 0), 2);
 	if (x - 25>0)
 		line(frame, Point(x, y), Point(x - 25, y), Scalar(0, 255, 0), 2);
 	else line(frame, Point(x, y), Point(0, y), Scalar(0, 255, 0), 2);
-	if (x + 25< width)
+	if (x + 25<FRAME_WIDTH)
 		line(frame, Point(x, y), Point(x + 25, y), Scalar(0, 255, 0), 2);
-	else line(frame, Point(x, y), Point(width, y), Scalar(0, 255, 0), 2);
+	else line(frame, Point(x, y), Point(FRAME_WIDTH, y), Scalar(0, 255, 0), 2);
 
 
-	putText(frame, intToString(x) + "," + intToString(y), Point(x, y + 30), 1, 1, Scalar(0, 255, 0), 2);
+	putText(frame, intToString(x) + "," + intToString(y), Point(x, y + 50), 1, 1, Scalar(0, 255, 0), 3);
 
 }
 
-void Sledzenie(int &x, int &y, Mat imgThresholded, Mat &imgOriginal){
+void Follow(int &x, int &y, Mat imgThresholded, Mat &imgOriginal){
 	Mat temp;
 	imgThresholded.copyTo(temp);
 
@@ -86,16 +97,61 @@ void Sledzenie(int &x, int &y, Mat imgThresholded, Mat &imgOriginal){
 				else objectFound = false;
 			}
 			if (objectFound == true){
-				putText(imgOriginal, "Sledzenie obiektu", Point(0, 50), 2, 1, Scalar(0, 255, 0), 2);
-				drawObject(x, y, imgOriginal);
+				putText(imgOriginal, "sledzenie obiektu", Point(0, 50), 2, 1, Scalar(0, 255, 0), 2);
+				Draw(x, y, imgOriginal);
 			}
 		}
-		else putText(imgOriginal, "Za duzo szumow", Point(0, 50), 1, 2, Scalar(0, 0, 255), 2);
+		else putText(imgOriginal, "za duzo szumow", Point(0, 50), 1, 2, Scalar(0, 0, 255), 2);
 	}
 
 }
-int _tmain(int argc, _TCHAR* argv[])
+
+int main(int argc, char** argv)
 {
+	trackbars();
+	VideoCapture cap(0);
+
+	if (!cap.isOpened())
+	{
+		cout << "brak Kamery Internetowej" << endl;
+		return -1;
+	}
+
+	// zapis obrazu z kamery do zmiennej tymczasowej
+	Mat imgTmp;
+	cap.read(imgTmp);
+
+	while (true)
+	{
+		Mat imgOriginal;
+
+		bool bSuccess = cap.read(imgOriginal); // szczytanie obrazu z kamery
+
+		Mat imgRGB;
+		cvtColor(imgOriginal, imgRGB, COLOR_HSV2RGB); // konwersja obrazu hsv na rgb
+
+		Mat imgThresholded;
+		int x = 0, y = 0;
+		inRange(imgRGB, Scalar(R, G, B), Scalar(R2, G2, B2), imgThresholded); //Konwersja obrazu 
+
+		// Wykonanie filtracji obrazu
+		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		dilate(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+
+		dilate(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+		Follow(x, y, imgThresholded, imgOriginal);
+
+		imshow("thresholded Image", imgThresholded); // ukazanie obrazu skonwertowanego
+		imshow("original", imgOriginal); // ukazanie obrazu oryginalnego
+
+		if (waitKey(30) == 27)
+			break;
+
+
+	}
+
 	return 0;
 }
-
