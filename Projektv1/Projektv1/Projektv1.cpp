@@ -9,9 +9,9 @@
 using namespace cv;
 using namespace std;
 
-int Rmin = 170;
-int Rmax = 179;
-int Gmin = 150;
+int Rmin = 0;
+int Rmax = 255;
+int Gmin = 0;
 int Gmax = 255;
 int Bmin = 0;
 int Bmax = 255;
@@ -35,10 +35,10 @@ void trackbars(){
 	namedWindow("RGB - ustawienia", CV_WINDOW_AUTOSIZE);
 
 	createTrackbar("Redmin", "RGB - ustawienia", &R, 255);
-	createTrackbar("Redmax", "RGB - ustawienia", &R2, 256);
+	createTrackbar("Redmax", "RGB - ustawienia", &R2, 255);
 
 	createTrackbar("Greenmin", "RGB - ustawienia", &G, 255);
-	createTrackbar("Greenmax", "RGB - ustawienia", &G2, 256);
+	createTrackbar("Greenmax", "RGB - ustawienia", &G2, 255);
 
 	createTrackbar("Bluemin", "RGB - ustawienia", &B, 255);
 	createTrackbar("Bluemax", "RGB - ustawienia", &B2, 255);
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
 		bool bSuccess = cap.read(imgOriginal); // szczytanie obrazu z kamery
 
 		Mat imgRGB;
-		cvtColor(imgOriginal, imgRGB, COLOR_HSV2RGB); // konwersja obrazu hsv na rgb
+		cvtColor(imgOriginal, imgRGB, COLOR_BGR2RGB); // konwersja obrazu BGR na rgb
 
 		Mat imgThresholded;
 		int x = 0, y = 0;
