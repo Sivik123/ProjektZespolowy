@@ -15,7 +15,7 @@
   <HelpConfiguration name="HelpFile">
     <OutputPath>.\Help</OutputPath>
     <CleanupOutputPath>true</CleanupOutputPath>
-    <HelpFileName>Projekt</HelpFileName>
+    <HelpFileName>Projektv1</HelpFileName>
     <ImageFolderPath />
     <Theme />
     <HtmlFormats>
