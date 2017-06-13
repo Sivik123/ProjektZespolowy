@@ -6,19 +6,23 @@
 #include <sstream>
 #include <string>
 #include <opencv\highgui.h>
-#include "stdafx.h"
+
 using namespace cv;
 using namespace std;
-[int Rmin = 0;
+
+int Rmin = 0;
 int Rmax = 255;
 int Gmin = 0;
 int Gmax = 255;
 int Bmin = 0;
 int Bmax = 255;
+
 int R = Rmin;
 int R2 = Rmax;
+
 int G = Gmin;
 int G2 = Gmax;
+
 int B = Bmin;
 int B2 = Bmax;
 
@@ -27,7 +31,7 @@ const int FRAME_HEIGHT = 480;
 const int MAX_NUM_OBJECTS = 50;
 const int MIN_OBJECT_AREA = 20 * 20;
 const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH / 1.5;
-]
+
 void trackbars(){
 	namedWindow("RGB - ustawienia", CV_WINDOW_AUTOSIZE);
 
@@ -41,7 +45,7 @@ void trackbars(){
 	createTrackbar("Bluemax", "RGB - ustawienia", &B2, 255);
 }
 
-string inttostring(int number){
+string intToString(int number){
 
 
 	std::stringstream ss;
@@ -65,7 +69,8 @@ void Draw(int x, int y, Mat &frame){
 		line(frame, Point(x, y), Point(x + 25, y), Scalar(0, 255, 0), 2);
 	else line(frame, Point(x, y), Point(FRAME_WIDTH, y), Scalar(0, 255, 0), 2);
 
-	putText(frame, inttostring(x) + "," + inttostring(y), Point(x, y + 50), 1, 1, Scalar(0, 255, 0), 3);
+
+	putText(frame, intToString(x) + "," + intToString(y), Point(x, y + 50), 1, 1, Scalar(0, 255, 0), 3);
 
 }
 
@@ -104,12 +109,12 @@ void Follow(int &x, int &y, Mat imgThresholded, Mat &imgOriginal){
 
 int main(int argc, char** argv)
 {
-	trackbars(); // wywo³anie okienka trackbar
-	VideoCapture cap(0); // program przechwyca obraz z kamery
+	trackbars();
+	VideoCapture cap(0);
 
-	if (!cap.isOpened()) //jesli program nie znajdzie kamery zostanie wywo³any komunikat o braku kamery
+	if (!cap.isOpened())
 	{
-		cout << "Brak Kamery Internetowej" << endl;
+		cout << "brak Kamery Internetowej" << endl;
 		return -1;
 	}
 
@@ -121,13 +126,14 @@ int main(int argc, char** argv)
 	{
 		Mat imgOriginal;
 
-		bool bSuccess = cap.read(imgOriginal); // szczytanie obrazu z kamery do imgoriginal
+		bool bSuccess = cap.read(imgOriginal); // szczytanie obrazu z kamery
 
 		Mat imgRGB;
-		cvtColor(imgOriginal, imgRGB, COLOR_BGR2RGB); // konwersja obrazu BGR na RGB z obrazu oryginalnego do zmiennej imgrgb
-		Mat imgThresholded; 
+		cvtColor(imgOriginal, imgRGB, COLOR_BGR2RGB); // konwersja obrazu BGR na rgb
+
+		Mat imgThresholded;
 		int x = 0, y = 0;
-		inRange(imgRGB, Scalar(R, G, B), Scalar(R2, G2, B2), imgThresholded); //Przypisanie zakresu wartoœci do zmiany koloru wyszukiwanego  
+		inRange(imgRGB, Scalar(R, G, B), Scalar(R2, G2, B2), imgThresholded); //Konwersja obrazu 
 
 		// Wykonanie filtracji obrazu
 		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
@@ -137,13 +143,14 @@ int main(int argc, char** argv)
 		dilate(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
 		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
 
-		Follow(x, y, imgThresholded, imgOriginal);// wywo³anie funkcji sledzacej
+		Follow(x, y, imgThresholded, imgOriginal);
 
-		imshow("thresholded Image", imgThresholded); // ukazanie obrazu skonwertowanego w imgThresholded
-		imshow("original", imgOriginal); // ukazanie obrazu oryginalnego w imgOriginal
+		imshow("thresholded Image", imgThresholded); // ukazanie obrazu skonwertowanego
+		imshow("original", imgOriginal); // ukazanie obrazu oryginalnego
 
-		if (waitKey(30) == 27) // szczytanie po kodzie ascii przycisku ESCAPE, przy wywo³aniu tego przycisku program zostaje wy³¹czony
+		if (waitKey(30) == 27)
 			break;
+
 
 	}
 
